@@ -897,18 +897,18 @@ copy_compact(Db, NewDb0, Retry) ->
 
     Headers = compute_headers(Db, NewDb1#db.update_seq),
 
-    NewDb6 =
+    NewDb2 =
     lists:foldl(fun(Ss, NewDb) ->
                   DbSs = init_db(Db#db.name, Db#db.filepath, Db#db.fd, Ss),
                   copy_compact_snapshot(DbSs, NewDb, Retry, TotalChanges)
                 end, NewDb1, Headers),
-    if NewDb6#db.security /= Db#db.security ->
-        {ok, Ptr} = couch_file:append_term(NewDb6#db.fd, Db#db.security),
-        NewDb7 = NewDb6#db{security=Db#db.security, security_ptr=Ptr};
+    if NewDb2#db.security /= Db#db.security ->
+        {ok, Ptr} = couch_file:append_term(NewDb2#db.fd, Db#db.security),
+        NewDb3 = NewDb2#db{security=Db#db.security, security_ptr=Ptr};
        true ->
-        NewDb7 = NewDb6
+        NewDb3 = NewDb2
     end,
-    commit_data(NewDb7#db{update_seq=Db#db.update_seq}).
+    commit_data(NewDb3#db{update_seq=Db#db.update_seq}).
 
 copy_compact_snapshot(DbSs, NewDb, Retry, TotalChanges) ->
     EnumBySeqFun =
@@ -949,11 +949,11 @@ copy_compact_snapshot(DbSs, NewDb, Retry, TotalChanges) ->
 
     %% snapshot is taken in compact file for each snapshot in the original.
     %% the current header may not be a snapshot
-    NewDb51 = commit_data(NewDb5#db{update_seq=DbSs#db.update_seq}),
+    NewDb6 = commit_data(NewDb5#db{update_seq=DbSs#db.update_seq}),
     if (DbSs#db.header#db_header.snapshot_id > 0) ->
-        snap(NewDb51);
+        snap(NewDb6);
        true ->
-        NewDb51
+        NewDb6
     end.
 
 snap(#db{fd=Fd, header=Header}=Db) ->
